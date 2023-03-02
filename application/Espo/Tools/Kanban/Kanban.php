@@ -38,9 +38,14 @@ use Espo\Core\Select\SearchParams;
 use Espo\Core\Select\SelectBuilderFactory;
 use Espo\Core\Utils\Metadata;
 use Espo\ORM\EntityManager;
+use Espo\Core\Di\InjectableFactoryAware;
+use Espo\Core\Di\InjectableFactorySetter;
+use Espo\Core\Record\Select\ApplierClassNameListProvider;
 
-class Kanban
+class Kanban implements InjectableFactoryAware
 {
+    use InjectableFactorySetter;
+
     private const DEFAULT_MAX_ORDER_NUMBER = 50;
     private const MAX_GROUP_LENGTH = 100;
 
@@ -137,6 +142,9 @@ class Kanban
             ->from($this->entityType)
             ->withStrictAccessControl()
             ->withSearchParams($searchParams)
+            ->withAdditionalApplierClassNameList(
+                $this->createSelectApplierClassNameListProvider()->get($this->entityType)
+            )
             ->build();
 
         $collection = $this->entityManager
@@ -248,6 +256,11 @@ class Kanban
             ($hasMore ? Collection::TOTAL_HAS_MORE : Collection::TOTAL_HAS_NO_MORE);
 
         return new Result($collection, $total, $additionalData);
+    }
+
+    private function createSelectApplierClassNameListProvider(): ApplierClassNameListProvider
+    {
+        return $this->injectableFactory->create(ApplierClassNameListProvider::class);
     }
 
     /**
