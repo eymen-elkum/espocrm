@@ -38,6 +38,7 @@ use Espo\Core\Select\SearchParams;
 use Espo\Core\Select\SelectBuilderFactory;
 use Espo\Core\Utils\Metadata;
 use Espo\ORM\EntityManager;
+use Espo\Core\Record\Select\ApplierClassNameListProvider;
 
 class Kanban
 {
@@ -56,7 +57,8 @@ class Kanban
         private SelectBuilderFactory $selectBuilderFactory,
         private EntityManager $entityManager,
         private ListLoadProcessor $listLoadProcessor,
-        private RecordServiceContainer $recordServiceContainer
+        private RecordServiceContainer $recordServiceContainer,
+        private ApplierClassNameListProvider $applierClassNameListProvider,
     ) {}
 
     public function setEntityType(string $entityType): self
@@ -137,6 +139,9 @@ class Kanban
             ->from($this->entityType)
             ->withStrictAccessControl()
             ->withSearchParams($searchParams)
+            ->withAdditionalApplierClassNameList(
+                $this->applierClassNameListProvider->get($this->entityType)
+            )
             ->build();
 
         $collection = $this->entityManager
